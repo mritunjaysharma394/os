@@ -1,0 +1,65 @@
+package:
+  name: gitlab-sidekiq
+  version: 17.1.1
+  epoch: 1
+  # description: To update later
+  copyright:
+    - license: MIT # to change later, draft work only
+  dependencies:
+    runtime:
+      - ruby-3.2
+      - ruby-3.2-dev
+      - ruby3.2-bundler
+
+environment:
+  contents:
+    packages:
+      - build-base
+      - busybox
+      - ca-certificates-bundle
+      - clang
+      - cmake
+      - git
+      - glibc-dev
+      - icu-dev
+      - krb5-dev
+      - libpq-16
+      - nodejs
+      - postgresql-dev
+      - ruby-3.2
+      - ruby-3.2-dev
+      - ruby3.2-bundler
+      - yarn
+      - zlib-dev
+
+pipeline:
+  - uses: git-checkout
+    with:
+      expected-commit: d0ac56e0be2576f3101025fb4a977a5e2a88d3ab
+      repository: https://gitlab.com/gitlab-org/gitlab.git
+      tag: v${{package.version}}-ee
+
+  - runs: |
+      export CC=clang
+      export CXX=clang++
+      export CXXFLAGS="-std=c++17 -fPIC"
+      export LDSHARED="clang++-18 -shared"
+      bundle config build.static_holmes --with-cflags="-fPIC" --with-cxxflags="-std=c++17 -fPIC" --with-ldflags="-shared -lstdc++"
+      bundle install --without development test
+
+  - runs: |
+      mkdir -p ${{targets.destdir}}/gitlab
+      cp Gemfile ${{targets.destdir}}/gitlab
+      cp -r ./gems ${{targets.destdir}}/gitlab
+      cp -r ./vendor ${{targets.destdir}}/gitlab
+      cp -r ./config ${{targets.destdir}}/gitlab
+      cp -r ./bin ${{targets.destdir}}/gitlab
+      cp -r ./lib ${{targets.destdir}}/gitlab
+      cp -r ./sidekiq_cluster ${{targets.destdir}}/gitlab
+      cp -r ./metrics_server ${{targets.destdir}}/gitlab
+
+# Might have to change this later
+update:
+  enabled: true
+  release-monitor:
+    identifier: 11337
