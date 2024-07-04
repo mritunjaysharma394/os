@@ -31,6 +31,8 @@ environment:
       - ruby3.2-bundler
       - yarn
       - zlib-dev
+  environment:
+    GEM_PATH: "/usr/lib/ruby/gems/3.2.0/ruby/3.2.0"
 
 pipeline:
   - uses: git-checkout
@@ -44,12 +46,20 @@ pipeline:
       export CXX=clang++
       export CXXFLAGS="-std=c++17 -fPIC"
       export LDSHARED="clang++-18 -shared"
+      GEM_DIR=${{targets.destdir}}$(ruby -e 'puts Gem.default_dir')
+      mkdir -p ${GEM_DIR}
+      bundle config set --local path ${GEM_DIR}
+
       bundle config build.static_holmes --with-cflags="-fPIC" --with-cxxflags="-std=c++17 -fPIC" --with-ldflags="-shared -lstdc++"
-      bundle install --without development test
+      bundle install
+      rm -rf ${{targets.destdir}}/usr/lib/ruby/gems/3.2.0/ruby/3.2.0/gems/dartsass-1.49.8
+      export GEM_PATH="/usr/lib/ruby/gems/3.2.0/ruby/3.2.0"
 
   - runs: |
       mkdir -p ${{targets.destdir}}/gitlab
       cp Gemfile ${{targets.destdir}}/gitlab
+      cp VERSION ${{targets.destdir}}/gitlab
+      cp INSTALLATION_TYPE ${{targets.destdir}}/gitlab
       cp -r ./gems ${{targets.destdir}}/gitlab
       cp -r ./vendor ${{targets.destdir}}/gitlab
       cp -r ./config ${{targets.destdir}}/gitlab
