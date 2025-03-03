@@ -39,6 +39,7 @@ environment:
       - jq
       - keyutils-dev
       - libaio-dev
+      - libarrow
       - libcap-dev
       - libcap-ng-dev
       - libedit-dev
@@ -128,6 +129,7 @@ pipeline:
         -DWITH_SYSTEM_ZSTD=ON \
         -DWITH_QATLIB=OFF \
         -DWITH_QATZIP=OFF \
+        -DWITH_RADOSGW_LUA_PACKAGES:BOOL=OFF \
         -DWITH_TESTS="$(want_check && echo ON || echo OFF)" \
         -DWITH_THREAD_SAFE_RES_QUERY=ON
 
@@ -141,5 +143,9 @@ pipeline:
 
 update:
   enabled: true
+  ignore-regex-patterns:
+    - 'rc*'
   github:
     identifier: ceph/ceph
+    strip-prefix: v
+    use-tag: true
